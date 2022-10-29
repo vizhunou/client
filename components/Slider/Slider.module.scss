@@ -1,0 +1,54 @@
+$slider-thickness: 2rem;
+$track-thickness: 0.125rem;
+$slider-padding: $slider-thickness / 2 - $track-thickness / 2;
+$thumb-size: 0.5rem;
+$slider-progress-color: blue;
+
+.base {
+    position: relative;
+
+    box-sizing: border-box;
+    display: block;
+    height: $slider-thickness;
+    padding: $slider-padding 0;
+
+    color: $slider-progress-color;
+
+    cursor: pointer;
+    user-select: none;
+
+    &:focus {
+        outline: none;
+    }
+}
+
+.track {
+    display: block;
+    height: $track-thickness;
+
+    background-color: lightgray;
+    border-radius: $track-thickness;
+}
+
+.thumb {
+    position: absolute;
+    transform: translate(-50%, calc(-50% - #{$track-thickness / 2}));
+
+    width: $slider-thickness;
+    height: $slider-thickness;
+
+    &::before {
+        content: "";
+
+        position: absolute;
+        inset: ($slider-thickness - $thumb-size) / 2;
+
+        background-color: currentColor;
+        border-radius: 50%;
+        transition: transform .15s;
+    }
+
+    .base:focus &::before {
+        transform: scale(1.618);
+    }
+}
