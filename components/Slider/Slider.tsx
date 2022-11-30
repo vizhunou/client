@@ -18,7 +18,7 @@ export type SliderProps = Readonly<{
 const clamp = (value: number) => {
     if (value < 0) return 0;
     if (value > 100) return 100;
-    return Math.round(value);
+    return Number(value.toFixed(2));
 }
 
 const STEP = 5;
@@ -34,7 +34,7 @@ export const Slider = ({
     const [percentage, setPercentage] = useState((value - valueMin) * 100 / (valueMax - valueMin));
 
     useEffect(() => {
-        setValue(valueMin + Math.round(percentage * (valueMax - valueMin) / 100));
+        setValue(Math.round(valueMin + percentage * (valueMax - valueMin) / 100));
     }, [percentage]);
 
     useEffect(() => {
