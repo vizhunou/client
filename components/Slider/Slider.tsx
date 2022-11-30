@@ -1,5 +1,4 @@
-import React, {useState, useMemo, useRef, useCallback} from "react";
-import {SliderProps} from "./types";
+import React, {useState, useMemo, useRef, useCallback, useEffect} from "react";
 import styles from './Slider.module.scss';
 
 enum Key {
@@ -9,27 +8,46 @@ enum Key {
     Left = 'ArrowLeft',
 }
 
-const keepShiftInRange = (value: number) => value < 0 ? 0 : value > 100 ? 100 : Number(value.toFixed(2));
+export type SliderProps = Readonly<{
+    valueMin?: number;
+    valueMax?: number;
+    initialValue?: number;
+    onChange: (value: number) => void;
+}>
 
-const Slider = ({ valueMax }: SliderProps) => {
-    const STEP = 5;
+const clamp = (value: number) => {
+    if (value < 0) return 0;
+    if (value > 100) return 100;
+    return Math.round(value);
+}
 
+const STEP = 5;
+
+export const Slider = ({
+   valueMin = 0,
+   valueMax = 100,
+   initialValue = 0,
+   onChange,
+}: SliderProps) => {
     const sliderRef = useRef<HTMLSpanElement>(null);
+    const [value, setValue] = useState(initialValue);
+    const [percentage, setPercentage] = useState((value - valueMin) * 100 / (valueMax - valueMin));
 
-    const [shift, setShift] = useState(0);
+    useEffect(() => {
+        setValue(valueMin + Math.round(percentage * (valueMax - valueMin) / 100));
+    }, [percentage]);
 
-    const handleSetShift = (value: number) => {
-        setShift(keepShiftInRange(value));
-    }
+    useEffect(() => {
+        onChange(value);
+    }, [value]);
 
     const handlePointerMove = (event: React.MouseEvent | MouseEvent | React.TouchEvent | TouchEvent) => {
         if (sliderRef.current) {
-            const { width, x } = sliderRef.current.getBoundingClientRect();
+            const {width, x} = sliderRef.current.getBoundingClientRect();
             const touch = 'changedTouches' in event
                 ? event.changedTouches[0].clientX
                 : event.clientX;
-            const value = (touch - x) * 100 / width;
-            handleSetShift(value);
+            setPercentage(clamp((touch - x) * 100 / width));
         }
     }
 
@@ -44,22 +62,22 @@ const Slider = ({ valueMax }: SliderProps) => {
     const handleMouseDown = (event: React.MouseEvent) => {
         handlePointerMove(event);
         document.addEventListener('mousemove', handlePointerMove);
-        document.addEventListener('mouseup', handleMouseUp, { once: true });
+        document.addEventListener('mouseup', handleMouseUp, {once: true});
     }
 
     const handleTouchStart = (event: React.TouchEvent) => {
         handlePointerMove(event);
         document.addEventListener('touchmove', handlePointerMove);
-        document.addEventListener('touchend', handleTouchEnd, { once: true });
+        document.addEventListener('touchend', handleTouchEnd, {once: true});
     }
 
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
         switch (true) {
             case event.key === Key.Left || event.key === Key.Down:
-                setShift(shift => keepShiftInRange(shift - STEP));
+                setPercentage(value => clamp(value - STEP));
                 break;
             case event.key === Key.Right || event.key === Key.Up:
-                setShift(shift => keepShiftInRange(shift + STEP));
+                setPercentage(value => clamp(value + STEP));
         }
     }, []);
 
@@ -70,14 +88,12 @@ const Slider = ({ valueMax }: SliderProps) => {
     }
 
     const trackBackgroundImage = useMemo(() => ({
-        backgroundImage: `linear-gradient(to right, currentColor 0%, currentColor ${shift}%, transparent ${shift}%)`
-    }), [shift]);
+        backgroundImage: `linear-gradient(to right, currentColor 0%, currentColor ${percentage}%, transparent ${percentage}%)`
+    }), [value]);
 
     const thumbPosition = useMemo(() => ({
-        left: `${shift}%`
-    }), [shift]);
-
-    const valueNow = useMemo(() => Math.round(shift * valueMax / 100), [shift]);
+        left: `${percentage}%`
+    }), [value]);
 
     return (
         <span
@@ -88,7 +104,7 @@ const Slider = ({ valueMax }: SliderProps) => {
             aria-orientation={'horizontal'}
             aria-valuemin={0}
             aria-valuemax={valueMax}
-            aria-valuenow={valueNow}
+            aria-valuenow={value}
             onMouseDown={handleMouseDown}
             onTouchStart={handleTouchStart}
             onFocus={handleOnFocus}
@@ -104,5 +120,3 @@ const Slider = ({ valueMax }: SliderProps) => {
         </span>
     )
 }
-
-export default Slider;
