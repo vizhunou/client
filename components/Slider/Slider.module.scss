@@ -1,13 +1,12 @@
-$slider-thickness: 2rem;
-$track-thickness: 0.125rem;
+$slider-thickness: 16rem;
+$track-thickness: 4rem;
 $slider-padding: $slider-thickness / 2 - $track-thickness / 2;
-$thumb-size: 0.5rem;
-$slider-progress-color: blue;
+$thumb-size: 8rem;
+$slider-progress-color: #a4a4a4;
 
 .base {
     position: relative;
 
-    box-sizing: border-box;
     display: block;
     height: $slider-thickness;
     padding: $slider-padding 0;
@@ -26,7 +25,7 @@ $slider-progress-color: blue;
     display: block;
     height: $track-thickness;
 
-    background-color: lightgray;
+    background-color: #5a5a5a;
     border-radius: $track-thickness;
 }
 

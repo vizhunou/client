@@ -1,4 +1,4 @@
-import React, {useState, useMemo, useRef, useCallback, useEffect} from "react";
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import styles from './Slider.module.scss';
 
 enum Key {
@@ -9,67 +9,43 @@ enum Key {
 }
 
 export type SliderProps = Readonly<{
-    valueMin?: number;
-    valueMax?: number;
-    initialValue?: number;
+    min: number;
+    max: number;
+    value: number;
     onChange: (value: number) => void;
 }>
 
 const clamp = (value: number) => {
     if (value < 0) return 0;
     if (value > 100) return 100;
-    return Number(value.toFixed(2));
-}
+    return Math.round(value);
+};
 
-const STEP = 5;
-
-export const Slider = ({
-   valueMin = 0,
-   valueMax = 100,
-   initialValue = 0,
-   onChange,
-}: SliderProps) => {
+export const Slider = ({ min, max, value, onChange }: SliderProps) => {
     const sliderRef = useRef<HTMLSpanElement>(null);
-    const [value, setValue] = useState(initialValue);
-    const [percentage, setPercentage] = useState((value - valueMin) * 100 / (valueMax - valueMin));
+    const [percentage, setPercentage] = useState((value - min) * 100 / (max - min));
+    const STEP = (max - min) / 100;
 
     useEffect(() => {
-        setValue(Math.round(valueMin + percentage * (valueMax - valueMin) / 100));
-    }, [percentage]);
+        onChange(Math.round(percentage * 100 / (max - min)));
+    }, [percentage, max, min, onChange]);
 
-    useEffect(() => {
-        onChange(value);
-    }, [value]);
-
-    const handlePointerMove = (event: React.MouseEvent | MouseEvent | React.TouchEvent | TouchEvent) => {
+    const handleMouseMove = (event: React.MouseEvent | MouseEvent) => {
         if (sliderRef.current) {
-            const {width, x} = sliderRef.current.getBoundingClientRect();
-            const touch = 'changedTouches' in event
-                ? event.changedTouches[0].clientX
-                : event.clientX;
-            setPercentage(clamp((touch - x) * 100 / width));
+            const { width, x } = sliderRef.current.getBoundingClientRect();
+            setPercentage(clamp((event.clientX - x) * 100 / width));
         }
-    }
+    };
 
     const handleMouseUp = () => {
-        document.removeEventListener('mousemove', handlePointerMove);
-    }
-
-    const handleTouchEnd = () => {
-        document.removeEventListener('touchmove', handlePointerMove);
-    }
+        document.removeEventListener('mousemove', handleMouseMove);
+    };
 
     const handleMouseDown = (event: React.MouseEvent) => {
-        handlePointerMove(event);
-        document.addEventListener('mousemove', handlePointerMove);
-        document.addEventListener('mouseup', handleMouseUp, {once: true});
-    }
-
-    const handleTouchStart = (event: React.TouchEvent) => {
-        handlePointerMove(event);
-        document.addEventListener('touchmove', handlePointerMove);
-        document.addEventListener('touchend', handleTouchEnd, {once: true});
-    }
+        handleMouseMove(event);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp, { once: true });
+    };
 
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
         switch (true) {
@@ -79,21 +55,21 @@ export const Slider = ({
             case event.key === Key.Right || event.key === Key.Up:
                 setPercentage(value => clamp(value + STEP));
         }
-    }, []);
+    }, [STEP]);
 
     const handleOnFocus = () => {
         if (sliderRef.current) {
             sliderRef.current.addEventListener('keydown', handleKeyDown);
         }
-    }
+    };
 
-    const trackBackgroundImage = useMemo(() => ({
+    const trackStyle = {
         backgroundImage: `linear-gradient(to right, currentColor 0%, currentColor ${percentage}%, transparent ${percentage}%)`
-    }), [value]);
+    };
 
-    const thumbPosition = useMemo(() => ({
+    const thumbStyle = {
         left: `${percentage}%`
-    }), [value]);
+    };
 
     return (
         <span
@@ -101,22 +77,21 @@ export const Slider = ({
             role="slider"
             className={styles.base}
             tabIndex={0}
-            aria-orientation={'horizontal'}
-            aria-valuemin={0}
-            aria-valuemax={valueMax}
+            aria-orientation="horizontal"
+            aria-valuemin={min}
+            aria-valuemax={max}
             aria-valuenow={value}
             onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
             onFocus={handleOnFocus}
         >
             <span
                 className={styles.track}
-                style={trackBackgroundImage}
+                style={trackStyle}
             ></span>
             <span
                 className={styles.thumb}
-                style={thumbPosition}
+                style={thumbStyle}
             ></span>
         </span>
-    )
-}
+    );
+};
