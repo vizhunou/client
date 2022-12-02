@@ -9,6 +9,7 @@ enum Key {
 }
 
 export type SliderProps = Readonly<{
+    value: number;
     onChange: (value: number) => void;
 }>
 
@@ -18,13 +19,13 @@ const clamp = (value: number) => {
     return Math.round(value);
 };
 
-export const Slider = ({ onChange }: SliderProps) => {
+export const Slider = ({ value, onChange }: SliderProps) => {
     const sliderRef = useRef<HTMLSpanElement>(null);
-    const [value, setValue] = useState(0);
+    const [_value, setValue] = useState(value);
 
     useEffect(() => {
-        onChange(value);
-    }, [value, onChange]);
+        onChange(_value);
+    }, [_value, onChange]);
 
     const handleMouseMove = (event: React.MouseEvent | MouseEvent) => {
         if (sliderRef.current) {

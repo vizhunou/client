@@ -12,7 +12,7 @@ export const Root = () => {
 
     return (
         <div className={styles.base}>
-            <Slider min={13} max={23} value={value} onChange={handleSetValue} />
+            <Slider value={value} onChange={handleSetValue} />
         </div>
     );
 };
