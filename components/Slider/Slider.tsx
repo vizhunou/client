@@ -9,9 +9,6 @@ enum Key {
 }
 
 export type SliderProps = Readonly<{
-    min: number;
-    max: number;
-    value: number;
     onChange: (value: number) => void;
 }>
 
@@ -21,19 +18,18 @@ const clamp = (value: number) => {
     return Math.round(value);
 };
 
-export const Slider = ({ min, max, value, onChange }: SliderProps) => {
+export const Slider = ({ onChange }: SliderProps) => {
     const sliderRef = useRef<HTMLSpanElement>(null);
-    const [percentage, setPercentage] = useState((value - min) * 100 / (max - min));
-    const STEP = (max - min) / 100;
+    const [value, setValue] = useState(0);
 
     useEffect(() => {
-        onChange(Math.round(percentage * 100 / (max - min)));
-    }, [percentage, max, min, onChange]);
+        onChange(value);
+    }, [value, onChange]);
 
     const handleMouseMove = (event: React.MouseEvent | MouseEvent) => {
         if (sliderRef.current) {
             const { width, x } = sliderRef.current.getBoundingClientRect();
-            setPercentage(clamp((event.clientX - x) * 100 / width));
+            setValue(clamp((event.clientX - x) * 100 / width));
         }
     };
 
@@ -50,12 +46,12 @@ export const Slider = ({ min, max, value, onChange }: SliderProps) => {
     const handleKeyDown = useCallback((event: KeyboardEvent) => {
         switch (true) {
             case event.key === Key.Left || event.key === Key.Down:
-                setPercentage(value => clamp(value - STEP));
+                setValue(value => clamp(value - 1));
                 break;
             case event.key === Key.Right || event.key === Key.Up:
-                setPercentage(value => clamp(value + STEP));
+                setValue(value => clamp(value + 1));
         }
-    }, [STEP]);
+    }, []);
 
     const handleOnFocus = () => {
         if (sliderRef.current) {
@@ -64,11 +60,11 @@ export const Slider = ({ min, max, value, onChange }: SliderProps) => {
     };
 
     const trackStyle = {
-        backgroundImage: `linear-gradient(to right, currentColor 0%, currentColor ${percentage}%, transparent ${percentage}%)`
+        backgroundImage: `linear-gradient(to right, currentColor 0%, currentColor ${value}%, transparent ${value}%)`
     };
 
     const thumbStyle = {
-        left: `${percentage}%`
+        left: `${value}%`
     };
 
     return (
@@ -78,8 +74,8 @@ export const Slider = ({ min, max, value, onChange }: SliderProps) => {
             className={styles.base}
             tabIndex={0}
             aria-orientation="horizontal"
-            aria-valuemin={min}
-            aria-valuemax={max}
+            aria-valuemin={0}
+            aria-valuemax={100}
             aria-valuenow={value}
             onMouseDown={handleMouseDown}
             onFocus={handleOnFocus}
